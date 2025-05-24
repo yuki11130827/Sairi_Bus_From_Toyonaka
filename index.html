@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>再履バス発車案内(豊中→箕面,吹田方面)</title>
+  <style>
+    body {
+      background-color: #ffffff;
+      color: rgb(0, 0, 0);
+      font-family: monospace;
+      padding: 20px;
+    }
+    h1 {
+      color: rgb(0, 0, 0);
+      font-size: 30px;
+    }
+    .board {
+      white-space: pre;
+      font-size: 24px;
+      line-height: 1.6;
+      border-top: 1px solid rgb(0, 0, 0);
+      padding-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>再履バス発車案内(豊中→箕面,吹田方面)</h1>
+  <div class="board" id="board">読み込み中...</div>
+
+  <script>
+    const hours = [8,8,8,8,8,9,9,9,9,9,10,10,10,11,12,12,12,12,12,12,13,13,14,15,15,15,16,16,16,16,17,17,17,17,18,18,18,18,19,19,20];
+    const minutes = [0,5,10,15,45,0,20,45,50,55,0,40,50,30,5,10,15,40,45,55,5,35,25,10,35,45,0,30,40,55,20,25,40,45,0,15,30,55,0,25,10];
+    const destinations = ["吹田","吹田","吹田","箕面","吹田","吹田","箕面経由吹田","吹田","吹田","箕面","箕面","吹田","吹田","箕面経由吹田","吹田","吹田","箕面","箕面経由吹田","吹田","吹田","箕面","箕面経由吹田","箕面経由吹田","箕面経由吹田","吹田","箕面","箕面経由吹田","吹田","箕面","吹田","箕面","箕面経由吹田","箕面","吹田","吹田","箕面","吹田","吹田","箕面","箕面経由吹田","箕面経由吹田"];
+    const types = ["直行","直行","直行","普通","直行","直行","普通","直行","直行","普通","普通","直行","直行","普通","直行","直行","普通","普通","直行","直行","普通","普通","普通","普通","直行","普通","普通","直行","普通","直行","普通","普通","普通","直行","直行","普通","直行","直行","普通","普通","普通"];
+
+    let currentBus = -999;
+
+    function pad(num) {
+      return num < 10 ? "0" + num : "" + num;
+    }
+
+    function formatRow(i) {
+      const h = hours[i];
+      const m = minutes[i];
+      const type = types[i];
+      const dest = destinations[i];
+
+      const hourStr = h < 10 ? " " + h : h;
+      const minStr = pad(m);
+      const timeStr = `${hourStr}:${minStr}`;
+
+      let destStr = "";
+      let stops = "";
+
+      if (dest === "箕面経由吹田") {
+        destStr = " 箕面→吹田 ";
+        stops = "豊中 -→ 箕面 -→ 吹田";
+      } else if (dest === "吹田") {
+        destStr = " 　吹　田　 ";
+        stops = "豊中 -→ ---- -→ 吹田";
+      } else if (dest === "箕面") {
+        destStr = " 　箕　面　 ";
+        stops = "豊中 -→ 箕面";
+      }
+
+      return `  ${timeStr}   |　${type}　| ${destStr} | ${stops}`;
+    }
+
+    function updateBoard() {
+      const now = new Date();
+      const h = now.getHours();
+      const m = now.getMinutes();
+      let nextBus = -1;
+
+      // 時間と分から次発を探す
+      for (let i = 0; i < hours.length; i++) {
+        if (hours[i] > h || (hours[i] === h && minutes[i] >= m)) {
+          nextBus = i;
+          break;
+        }
+      }
+      if (nextBus === -1) nextBus = 0;
+
+      if (nextBus !== currentBus) {
+        let output = "";
+        output += " 発車時刻 |　種別　|　　 行先 　　|　　　停車バス停　　　|\n";
+        output += "-----------------------------------------------------------\n";
+
+        for (let i = nextBus; i < nextBus + 5 && i < hours.length; i++) {
+          output += formatRow(i) + "\n";
+        }
+
+        document.getElementById("board").textContent = output;
+        currentBus = nextBus;
+      }
+    }
+
+    // 毎秒更新
+    setInterval(updateBoard, 1000);
+    updateBoard(); // 初期表示
+  </script>
+</body>
+</html>
